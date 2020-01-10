@@ -594,6 +594,18 @@ self["C3_Shaders"] = {};
 
 "use strict";C3.Behaviors.Pin.Exps={PinnedUID(){return this._pinInst?this._pinInst.GetUID():-1}};
 
+"use strict";C3.Behaviors.Bullet=class extends C3.SDKBehaviorBase{constructor(a){super(a)}Release(){super.Release()}};
+
+"use strict";C3.Behaviors.Bullet.Type=class extends C3.SDKBehaviorTypeBase{constructor(a){super(a)}Release(){super.Release()}OnCreate(){}};
+
+"use strict";{C3.Behaviors.Bullet.Instance=class extends C3.SDKBehaviorInstanceBase{constructor(b,c){var d=Math.abs;super(b);const e=this.GetWorldInfo();this._speed=0,this._acc=0,this._g=0,this._bounceOffSolid=!1,this._setAngle=!1,this._isStepping=!1,this._isEnabled=!0,this._dx=0,this._dy=0,this._lastX=e.GetX(),this._lastY=e.GetY(),this._lastKnownAngle=e.GetAngle(),this._travelled=0,this._stepSize=Math.min(d(e.GetWidth()),d(e.GetHeight())/2),this._stopStepping=!1,c&&(this._speed=c[0],this._acc=c[1],this._g=c[2],this._bounceOffSolid=!!c[3],this._setAngle=!!c[4],this._isStepping=!!c[5],this._isEnabled=!!c[6]);const f=e.GetAngle();this._dx=Math.cos(f)*this._speed,this._dy=Math.sin(f)*this._speed,this._isEnabled&&(this._StartTicking(),this._bounceOffSolid&&this._StartPostTicking())}Release(){super.Release()}SaveToJson(){const a={"dx":this._dx,"dy":this._dy,"lx":this._lastX,"ly":this._lastY,"lka":this._lastKnownAngle,"t":this._travelled};return 0!==this._acc&&(a["acc"]=this._acc),0!==this._g&&(a["g"]=this._g),this._isStepping&&(a["st"]=this._isStepping),this._isEnabled||(a["e"]=this._isEnabled),this._bounceOffSolid&&(a["bos"]=this._bounceOffSolid),this._setAngle&&(a["sa"]=this._setAngle),a}LoadFromJson(a){this._dx=a["dx"],this._dy=a["dy"],this._lastX=a["lx"],this._lastY=a["ly"],this._lastKnownAngle=a["lka"],this._travelled=a["t"],this._acc=a.hasOwnProperty("acc")?a["acc"]:0,this._g=a.hasOwnProperty("g")?a["g"]:0,this._isStepping=!!a.hasOwnProperty("st")&&a["st"],this._bounceOffSolid=!!a.hasOwnProperty("bos")&&a["bos"],this._setAngle=!!a.hasOwnProperty("sa")&&a["sa"],this._SetEnabled(!a.hasOwnProperty("e")||a["e"])}Tick(){var b=Math.sin,c=Math.cos;if(!this._isEnabled)return;const d=this._runtime.GetDt(this._inst),e=this._inst.GetWorldInfo();if(e.GetAngle()!==this._lastKnownAngle){const a=e.GetAngle();if(this._setAngle){const d=C3.distanceTo(0,0,this._dx,this._dy);this._dx=c(a)*d,this._dy=b(a)*d}this._lastKnownAngle=a}let f=0,g=0;if(0!==this._acc){let h=C3.distanceTo(0,0,this._dx,this._dy),i=0;i=0===this._dx&&0===this._dy?e.GetAngle():C3.angleTo(0,0,this._dx,this._dy),h+=this._acc*d,f=c(i)*this._acc,g=b(i)*this._acc,0>h&&(h=0,f=0,g=0),this._dx=c(i)*h,this._dy=b(i)*h}if(0!==this._g&&(this._dy+=this._g*d,g+=this._g),this._lastX=e.GetX(),this._lastY=e.GetY(),0!==this._dx||0!==this._dy){const b=this._dx*d+.5*f*d*d,c=this._dy*d+.5*g*d*d,a=C3.distanceTo(0,0,b,c);if(this._MoveBy(b,c,a),this._travelled+=a,this._setAngle&&(0!=b||0!=c)){const d=C3.angleTo(0,0,b,c);e.SetAngle(d),this._lastKnownAngle=e.GetAngle()}e.SetBboxChanged()}}_MoveBy(b,c,d){const e=this.GetWorldInfo();if(!this._isStepping||d<=this._stepSize)return e.OffsetXY(b,c),e.SetBboxChanged(),void(this._isStepping&&this.Trigger(C3.Behaviors.Bullet.Cnds.OnStep));this._stopStepping=!1;const f=e.GetX(),g=e.GetY(),h=C3.angleTo(0,0,b,c),a=Math.cos(h)*this._stepSize,j=Math.sin(h)*this._stepSize,k=Math.floor(d/this._stepSize);for(let h=1;h<=k;++h)if(e.SetXY(f+a*h,g+j*h),e.SetBboxChanged(),this.Trigger(C3.Behaviors.Bullet.Cnds.OnStep),this._inst.IsDestroyed()||this._stopStepping)return;e.SetXY(f+b,g+c),e.SetBboxChanged(),this.Trigger(C3.Behaviors.Bullet.Cnds.OnStep)}PostTick(){if(this._isEnabled&&this._bounceOffSolid&&(0!==this._dx||0!==this._dy)){const a=this._runtime.GetDt(this._inst),b=this._inst.GetWorldInfo(),c=this._runtime.GetCollisionEngine(),d=c.TestOverlapSolid(this._inst);if(d){c.RegisterCollision(this._inst,d);const e=C3.distanceTo(0,0,this._dx,this._dy),f=c.CalculateBounceAngle(this._inst,this._lastX,this._lastY);this._dx=Math.cos(f)*e,this._dy=Math.sin(f)*e,b.OffsetXY(this._dx*a,this._dy*a),b.SetBboxChanged(),this._setAngle&&(b.SetAngle(f),this._lastKnownAngle=b.GetAngle(),b.SetBboxChanged()),c.PushOutSolid(this._inst,this._dx/e,this._dy/e,Math.max(2.5*e*a,30))||c.PushOutSolidNearest(this._inst,100)}}}GetPropertyValueByIndex(a){return a===0?this._GetSpeed():1===a?this._GetAcceleration():2===a?this._GetGravity():4===a?this._setAngle:5===a?this._isStepping:6===a?this._IsEnabled():void 0}SetPropertyValueByIndex(a,b){a===0?this._SetSpeed(b):1===a?this._acc=b:2===a?this._g=b:4===a?this._setAngle=!!b:5===a?this._isStepping=!!b:6===a?this._SetEnabled(!!b):void 0}_SetSpeed(b){const c=C3.angleTo(0,0,this._dx,this._dy);this._dx=Math.cos(c)*b,this._dy=Math.sin(c)*b}_GetSpeed(){return C3.round6dp(C3.distanceTo(0,0,this._dx,this._dy))}_SetAcceleration(b){this._acc=b}_GetAcceleration(){return this._acc}_SetGravity(a){this._g=a}_GetGravity(){return this._g}_SetAngleOfMotion(b){const a=C3.distanceTo(0,0,this._dx,this._dy);this._dx=Math.cos(b)*a,this._dy=Math.sin(b)*a}_GetAngleOfMotion(){return C3.angleTo(0,0,this._dx,this._dy)}_SetBounceOffSolids(a){a=!!a;this._bounceOffSolid===a||(this._bounceOffSolid=a,this._isEnabled&&(this._bounceOffSolid?this._StartPostTicking():this._StopPostTicking()))}_IsBounceOffSolids(){return this._bounceOffSolid}_SetDistanceTravelled(a){this._travelled=a}_GetDistanceTravelled(){return this._travelled}_SetEnabled(a){this._isEnabled=!!a,this._isEnabled?(this._StartTicking(),this._bounceOffSolid&&this._StartPostTicking()):(this._StopTicking(),this._StopPostTicking())}_IsEnabled(){return this._isEnabled}GetDebuggerProperties(){return[{title:"$"+this.GetBehaviorType().GetName(),properties:[{name:"behaviors.bullet.debugger.vector-x",value:this._dx,onedit:(a)=>this._dx=a},{name:"behaviors.bullet.debugger.vector-y",value:this._dy,onedit:(a)=>this._dy=a},{name:"behaviors.bullet.properties.speed.name",value:this._GetSpeed(),onedit:(a)=>this._SetSpeed(a)},{name:"behaviors.bullet.debugger.angle-of-motion",value:C3.toDegrees(this._GetAngleOfMotion())},{name:"behaviors.bullet.properties.gravity.name",value:this._GetGravity(),onedit:(a)=>this._SetGravity(a)},{name:"behaviors.bullet.properties.acceleration.name",value:this._GetAcceleration(),onedit:(a)=>this._SetAcceleration(a)},{name:"behaviors.bullet.debugger.distance-travelled",value:this._GetDistanceTravelled()},{name:"behaviors.bullet.properties.enabled.name",value:this._IsEnabled(),onedit:(a)=>this._SetEnabled(a)}]}]}GetScriptInterfaceClass(){return IBulletBehaviorInstance}};const c=new WeakMap;self.IBulletBehaviorInstance=class extends IBehaviorInstance{constructor(){super(),c.set(this,IBehaviorInstance._GetInitInst().GetSdkInstance())}get speed(){return c.get(this)._GetSpeed()}set speed(a){c.get(this)._SetSpeed(a)}get acceleration(){return c.get(this)._GetAcceleration()}set acceleration(b){c.get(this)._SetAcceleration(b)}get gravity(){return c.get(this)._GetGravity()}set gravity(a){c.get(this)._SetGravity(a)}get angleOfMotion(){return c.get(this)._GetAngleOfMotion()}set angleOfMotion(b){c.get(this)._SetAngleOfMotion(b)}get bounceOffSolids(){return c.get(this)._IsBounceOffSolids()}set bounceOffSolids(a){c.get(this)._SetBounceOffSolids(!!a)}get distanceTravelled(){return c.get(this)._GetDistanceTravelled()}set distanceTravelled(a){c.get(this)._SetDistanceTravelled(a)}get isEnabled(){return c.get(this)._IsEnabled()}set isEnabled(a){c.get(this)._SetEnabled(a)}}}
+
+"use strict";C3.Behaviors.Bullet.Cnds={CompareSpeed(a,b){const c=Math.sqrt(this._dx*this._dx+this._dy*this._dy);return C3.compare(c,a,b)},CompareTravelled(a,b){return C3.compare(this._GetDistanceTravelled(),a,b)},OnStep(){return!0},IsEnabled(){return this._IsEnabled()}};
+
+"use strict";C3.Behaviors.Bullet.Acts={SetSpeed(a){this._SetSpeed(a)},SetAcceleration(b){this._SetAcceleration(b)},SetGravity(a){this._SetGravity(a)},SetAngleOfMotion(b){this._SetAngleOfMotion(C3.toRadians(b))},Bounce(a){var b=Math.max;if(a){const c=a.GetFirstPicked(this._inst);if(c){const a=this._inst.GetWorldInfo(),d=this._runtime.GetCollisionEngine(),e=this._runtime.GetDt(this._inst),f=C3.distanceTo(0,0,this._dx,this._dy),g=d.CalculateBounceAngle(this._inst,this._lastX,this._lastY,c);this._dx=Math.cos(g)*f,this._dy=Math.sin(g)*f,a.OffsetXY(this._dx*e,this._dy*e),a.SetBboxChanged(),this._setAngle&&(a.SetAngle(g),this._lastKnownAngle=a.GetAngle(),a.SetBboxChanged()),0!==f&&(this._bounceOffSolid?!d.PushOutSolid(this._inst,this._dx/f,this._dy/f,b(2.5*f*e,30))&&d.PushOutSolidNearest(this._inst,100):d.PushOut(this._inst,this._dx/f,this._dy/f,b(2.5*f*e,30),c))}}},SetBounceOffSolids(a){this._SetBounceOffSolids(a)},SetDistanceTravelled(a){this._SetDistanceTravelled(a)},SetEnabled(a){this._SetEnabled(a)},StopStepping(){this._stopStepping=!0}};
+
+"use strict";C3.Behaviors.Bullet.Exps={Speed(){return this._GetSpeed()},Acceleration(){return this._GetAcceleration()},AngleOfMotion(){return C3.toDegrees(this._GetAngleOfMotion())},DistanceTravelled(){return this._GetDistanceTravelled()},Gravity(){return this._GetGravity()}};
+
 "use strict"
 self.C3_GetObjectRefTable = function () {
 	return [
@@ -608,6 +620,7 @@ self.C3_GetObjectRefTable = function () {
 		C3.Behaviors.Pin,
 		C3.Plugins.Mouse,
 		C3.Plugins.Keyboard,
+		C3.Behaviors.Bullet,
 		C3.Plugins.System.Cnds.OnLayoutStart,
 		C3.Plugins.System.Acts.SetLayerVisible,
 		C3.Plugins.System.Acts.ScrollToObject,
@@ -625,7 +638,16 @@ self.C3_GetObjectRefTable = function () {
 		C3.Plugins.Sprite.Acts.SetMirrored,
 		C3.Plugins.Sprite.Acts.SetPosToObject,
 		C3.Plugins.Keyboard.Cnds.IsKeyDown,
-		C3.Behaviors.Platform.Acts.SimulateControl
+		C3.Behaviors.Platform.Acts.SimulateControl,
+		C3.Plugins.Mouse.Cnds.OnClick,
+		C3.Plugins.Sprite.Cnds.IsVisible,
+		C3.Plugins.Sprite.Acts.Spawn,
+		C3.Plugins.Sprite.Cnds.IsOverlapping,
+		C3.Plugins.Sprite.Acts.SubInstanceVar,
+		C3.Plugins.Sprite.Acts.SetInstanceVar,
+		C3.Plugins.Sprite.Cnds.CompareInstanceVar,
+		C3.Plugins.Text.Acts.SetText,
+		C3.Plugins.Sprite.Cnds.OnCollision
 	];
 };
 self.C3_JsPropNameTable = [
@@ -640,6 +662,7 @@ self.C3_JsPropNameTable = [
 	{HowtoPlayScreen: 0},
 	{Solid: 0},
 	{Sprite2: 0},
+	{Health: 0},
 	{Platform: 0},
 	{ScrollTo: 0},
 	{BoundToLayout: 0},
@@ -656,7 +679,13 @@ self.C3_JsPropNameTable = [
 	{Rocks: 0},
 	{Foreground: 0},
 	{Tree: 0},
-	{TiledBackground: 0}
+	{TiledBackground: 0},
+	{EasterEgg: 0},
+	{Bullet: 0},
+	{BulletProjectile: 0},
+	{Sunrays: 0},
+	{Zombie: 0},
+	{Text: 0}
 ];
 
 "use strict";
@@ -758,6 +787,7 @@ self.C3_JsPropNameTable = [
 		() => 0,
 		() => 1,
 		() => 2,
+		() => 5,
 		() => 4,
 		() => 3,
 		p => {
